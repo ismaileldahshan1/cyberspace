@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberScape — HITL Operator Dashboard</title>
+  <style>
+    /* ── Reset & typography ────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      min-height: 100vh;
+    }
+
+    /* ── Top bar ─────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 12px 24px;
+    }
+    header h1 { font-size: 1.15rem; font-weight: 600; color: #58a6ff; }
+    .badge {
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-idle     { background:#21262d; color:#8b949e; }
+    .badge-planning { background:#1f2d3d; color:#58a6ff; }
+    .badge-awaiting { background:#2d2208; color:#e3b341; }
+    .badge-executing{ background:#0d2a1a; color:#3fb950; }
+    .badge-paused   { background:#2d1e0e; color:#f0883e; }
+    .badge-manual   { background:#2d1414; color:#f85149; }
+    .badge-completed{ background:#0d2a1a; color:#3fb950; }
+    .badge-error    { background:#3d0d0d; color:#ff7b72; }
+
+    /* ── Layout ──────────────────────────────────────── */
+    main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+    /* ── Cards ───────────────────────────────────────── */
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #21262d;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #8b949e;
+    }
+    .card-body { padding: 16px; }
+
+    /* ── Plan review panel ───────────────────────────── */
+    #plan-json-viewer {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.78rem;
+      white-space: pre-wrap;
+      max-height: 320px;
+      overflow-y: auto;
+      color: #7ee787;
+      margin-bottom: 12px;
+    }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    button {
+      padding: 7px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: opacity .15s;
+    }
+    button:hover { opacity: .85; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-green  { background: #238636; color: #fff; }
+    .btn-red    { background: #da3633; color: #fff; }
+    .btn-yellow { background: #9e6a03; color: #fff; }
+    .btn-blue   { background: #1f6feb; color: #fff; }
+    .btn-ghost  { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+
+    /* ── Textarea / inputs ───────────────────────────── */
+    textarea, input[type=text], select {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #c9d1d9;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      margin-top: 6px;
+    }
+    textarea { resize: vertical; min-height: 72px; }
+    label { font-size: 0.82rem; color: #8b949e; display: block; margin-top: 10px; }
+
+    /* ── Robot cards ─────────────────────────────────── */
+    .robot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 10px; }
+    .robot-card {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .robot-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 6px; }
+    .robot-type { font-size: 0.72rem; color: #8b949e; margin-bottom: 8px; }
+    .robot-online { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+    .online-true  { background: #3fb950; }
+    .online-false { background: #8b949e; }
+
+    /* ── Manual command form ─────────────────────────── */
+    #manual-robot-select { margin-bottom: 10px; }
+
+    /* ── Event log ───────────────────────────────────── */
+    #event-log {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: monospace;
+      font-size: 0.77rem;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    .log-entry { margin-bottom: 4px; color: #8b949e; }
+    .log-entry span { color: #c9d1d9; }
+
+    /* ── Toast notifications ─────────────────────────── */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1000;
+    }
+    .toast {
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      animation: slideIn .3s ease;
+    }
+    .toast-ok    { background: #1f4a26; border: 1px solid #3fb950; color: #3fb950; }
+    .toast-err   { background: #4a1f1f; border: 1px solid #f85149; color: #f85149; }
+    .toast-info  { background: #1f2d4a; border: 1px solid #58a6ff; color: #58a6ff; }
+    @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    /* ── Full-width row ──────────────────────────────── */
+    .full-row { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🤖 CyberScape HITL Dashboard</h1>
+  <span id="mission-badge" class="badge badge-idle">IDLE</span>
+  <span id="mission-title" style="font-size:.82rem;color:#8b949e;margin-left:4px;"></span>
+  <span style="margin-left:auto;font-size:.78rem;color:#484f58;">
+    Auto-refresh: <span id="countdown">5</span>s
+  </span>
+</header>
+
+<main>
+
+  <!-- ── Plan Review ──────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      📋 Plan Review
+      <span id="review-badge" class="badge badge-idle">—</span>
+    </div>
+    <div class="card-body">
+      <div id="plan-json-viewer">No plan pending review.</div>
+
+      <!-- Approve -->
+      <label for="approve-comments">Approval comments (optional)</label>
+      <textarea id="approve-comments" placeholder="LGTM / looks good..."></textarea>
+      <div class="btn-row">
+        <button id="btn-approve" class="btn-green" onclick="approvePlan()">✔ Approve</button>
+        <button id="btn-reject"  class="btn-red"   onclick="rejectPlan()">✖ Reject</button>
+      </div>
+
+      <!-- Modify -->
+      <label for="modify-request" style="margin-top:16px;">NL Modification Request</label>
+      <textarea id="modify-request" placeholder="e.g. Make the drone scan in a spiral pattern and add a 2-second hover at each corner."></textarea>
+      <div class="btn-row">
+        <button id="btn-modify" class="btn-yellow" onclick="requestModification()">✏ Request Modification</button>
+      </div>
+      <div id="modify-status" style="font-size:.78rem;color:#8b949e;margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <!-- ── Fleet Status ─────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">🚁 Fleet Status</div>
+    <div class="card-body">
+      <div class="robot-grid" id="robot-grid">
+        <div style="color:#484f58;font-size:.85rem;">Loading fleet…</div>
+      </div>
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn-yellow" onclick="pauseMission()">⏸ Pause All</button>
+        <button class="btn-green"  onclick="resumeMission()">▶ Resume All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Manual Control ──────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">🕹 Manual Control</div>
+    <div class="card-body">
+
+      <label for="manual-robot-select">Target Robot</label>
+      <select id="manual-robot-select">
+        <option value="">— select robot —</option>
+      </select>
+
+      <div class="btn-row">
+        <button class="btn-red"   onclick="takeManual()">🔴 Take Manual Control</button>
+        <button class="btn-green" onclick="releaseManual()">🟢 Release to Autonomous</button>
+      </div>
+
+      <label for="cmd-type">Command Type</label>
+      <select id="cmd-type" onchange="updateParamFields()">
+        <option value="stop">stop</option>
+        <option value="move">move</option>
+        <option value="go_to">go_to</option>
+        <option value="inspect">inspect</option>
+        <option value="hover">hover (UAV)</option>
+        <option value="land">land (UAV)</option>
+        <option value="takeoff">takeoff (UAV)</option>
+      </select>
+
+      <div id="param-fields" style="margin-top:8px;"></div>
+
+      <div class="btn-row">
+        <button class="btn-blue" onclick="sendCommand()">📡 Send Command</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Generate Mission ────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">🧠 Generate New Mission Plan</div>
+    <div class="card-body">
+      <label for="mission-title-input">Mission Title</label>
+      <input type="text" id="mission-title-input" placeholder="Search and Rescue – Sector B" />
+
+      <label for="mission-text-input">Mission Description</label>
+      <textarea id="mission-text-input" style="min-height:100px;"
+        placeholder="Use the drone to scan a 50x50m field for a survivor. Once located, deploy the robot dog to reach them and deliver the first-aid kit.">
+      </textarea>
+
+      <div class="btn-row">
+        <button class="btn-blue" onclick="generateMission()">⚡ Generate Plan</button>
+      </div>
+      <div id="gen-status" style="font-size:.78rem;margin-top:8px;color:#8b949e;"></div>
+    </div>
+  </div>
+
+  <!-- ── Event Log ────────────────────────────────────── -->
+  <div class="card full-row">
+    <div class="card-header">📜 Event Log</div>
+    <div class="card-body">
+      <div id="event-log"><em style="color:#484f58;">No events yet.</em></div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast-container"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────
+// Configuration
+// ─────────────────────────────────────────────────────────
+const BASE = '';   // same origin
+let refreshInterval = 5;
+let countdown = refreshInterval;
+let refreshTimer;
+let lastEventCount = 0;
+
+// ─────────────────────────────────────────────────────────
+// Utilities
+// ─────────────────────────────────────────────────────────
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(BASE + path, opts);
+  const json = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data: json };
+}
+
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function badgeClass(state) {
+  const map = {
+    IDLE: 'badge-idle',
+    PLANNING: 'badge-planning',
+    AWAITING_APPROVAL: 'badge-awaiting',
+    PENDING_REVIEW: 'badge-awaiting',
+    EXECUTING: 'badge-executing',
+    APPROVED: 'badge-executing',
+    PAUSED: 'badge-paused',
+    MANUAL: 'badge-manual',
+    COMPLETED: 'badge-completed',
+    ERROR: 'badge-error',
+    MODIFIED: 'badge-awaiting',
+    MODIFICATION_REQUESTED: 'badge-awaiting',
+    REJECTED: 'badge-error',
+  };
+  return map[state] || 'badge-idle';
+}
+
+// ─────────────────────────────────────────────────────────
+// Polling / refresh
+// ─────────────────────────────────────────────────────────
+
+async function refresh() {
+  try {
+    const { data: status } = await api('GET', '/hitl/status');
+    updateMissionBadge(status);
+    updateReviewPanel(status);
+    updateEventLog(status);
+  } catch (e) { /* server might be starting */ }
+
+  try {
+    const { data: fleet } = await api('GET', '/hitl/fleet_status');
+    updateFleetPanel(fleet);
+    populateRobotSelector(fleet);
+  } catch (e) {}
+}
+
+function startCountdown() {
+  clearInterval(refreshTimer);
+  countdown = refreshInterval;
+  document.getElementById('countdown').textContent = countdown;
+  refreshTimer = setInterval(() => {
+    countdown--;
+    document.getElementById('countdown').textContent = countdown;
+    if (countdown <= 0) {
+      refresh();
+      countdown = refreshInterval;
+    }
+  }, 1000);
+}
+
+// ─────────────────────────────────────────────────────────
+// UI update helpers
+// ─────────────────────────────────────────────────────────
+
+function updateMissionBadge(status) {
+  const b = document.getElementById('mission-badge');
+  const t = document.getElementById('mission-title');
+  b.textContent = status.mission_state || 'IDLE';
+  b.className = 'badge ' + badgeClass(status.mission_state);
+  if (status.mission_title) {
+    t.textContent = '— ' + status.mission_title;
+  }
+}
+
+function updateReviewPanel(status) {
+  const reviewBadge = document.getElementById('review-badge');
+  const rv = status.review_state || 'NOT_SUBMITTED';
+  reviewBadge.textContent = rv;
+  reviewBadge.className = 'badge ' + badgeClass(rv);
+
+  const viewer = document.getElementById('plan-json-viewer');
+  const modStatus = document.getElementById('modify-status');
+
+  if (rv === 'MODIFICATION_REQUESTED') {
+    modStatus.textContent = '⏳ LLM is processing your modification request…';
+  } else if (rv === 'MODIFIED') {
+    modStatus.textContent = '✅ Modification applied. Review the updated plan and approve.';
+  } else {
+    modStatus.textContent = '';
+  }
+
+  // Show pending plan JSON
+  if (status.review_state && status.review_state !== 'NOT_SUBMITTED') {
+    const robots = Object.keys(status.robots || {});
+    viewer.textContent = robots.length
+      ? `Plans pending for: ${robots.join(', ')}\n\nFetch GET /hitl/get_approved_plans for full JSON.`
+      : 'No robots in current plan.';
+  } else {
+    viewer.textContent = 'No plan pending review.';
+  }
+
+  // Enable/disable buttons
+  const canAct = ['PENDING_REVIEW', 'MODIFIED'].includes(rv);
+  document.getElementById('btn-approve').disabled = !canAct;
+  document.getElementById('btn-reject').disabled  = !canAct;
+  document.getElementById('btn-modify').disabled  = rv !== 'PENDING_REVIEW';
+}
+
+function updateFleetPanel(fleet) {
+  const grid = document.getElementById('robot-grid');
+  if (!fleet || Object.keys(fleet).length === 0) {
+    grid.innerHTML = '<div style="color:#484f58;font-size:.85rem;">No robots registered.</div>';
+    return;
+  }
+  grid.innerHTML = Object.entries(fleet).map(([name, info]) => `
+    <div class="robot-card">
+      <div class="robot-name">
+        <span class="robot-online online-${info.online}"></span>${name}
+      </div>
+      <div class="robot-type">${info.type === 'aerial' ? '🚁 Aerial' : '🤖 Ground'}</div>
+      <span class="badge ${badgeClass(info.mode)}">${info.mode || '—'}</span>
+      ${info.last_heartbeat_secs_ago !== null
+        ? `<div style="font-size:.72rem;color:#8b949e;margin-top:6px;">HB: ${info.last_heartbeat_secs_ago}s ago</div>`
+        : '<div style="font-size:.72rem;color:#484f58;margin-top:6px;">No heartbeat</div>'
+      }
+    </div>
+  `).join('');
+}
+
+function updateEventLog(status) {
+  const events = status.recent_events || [];
+  if (events.length === lastEventCount) return;
+  lastEventCount = events.length;
+
+  const log = document.getElementById('event-log');
+  if (events.length === 0) {
+    log.innerHTML = '<em style="color:#484f58;">No events yet.</em>';
+    return;
+  }
+  log.innerHTML = [...events].reverse().map(e => {
+    const ts = new Date(e.timestamp * 1000).toLocaleTimeString();
+    const dataStr = Object.entries(e.data || {})
+      .map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(', ');
+    return `<div class="log-entry">[${ts}] <span>${e.type}</span>${dataStr ? ' — ' + dataStr : ''}</div>`;
+  }).join('');
+}
+
+function populateRobotSelector(fleet) {
+  const sel = document.getElementById('manual-robot-select');
+  const current = sel.value;
+  const robots = Object.keys(fleet || {});
+  sel.innerHTML = '<option value="">— select robot —</option>' +
+    robots.map(r => `<option value="${r}">${r}</option>`).join('');
+  if (current) sel.value = current;
+}
+
+// ─────────────────────────────────────────────────────────
+// Plan review actions
+// ─────────────────────────────────────────────────────────
+
+async function approvePlan() {
+  const comments = document.getElementById('approve-comments').value.trim();
+  const { ok, data } = await api('POST', '/hitl/approve_plan', { comments });
+  if (ok) { toast('✔ Plans approved — execution may begin.', 'ok'); await refresh(); }
+  else     { toast('✖ ' + (data.message || 'Approval failed'), 'err'); }
+}
+
+async function rejectPlan() {
+  const reason = prompt('Rejection reason (optional):') || '';
+  const { ok, data } = await api('POST', '/hitl/reject_plan', { reason });
+  if (ok) { toast('Plans rejected — please regenerate.', 'info'); await refresh(); }
+  else     { toast('✖ ' + (data.message || 'Reject failed'), 'err'); }
+}
+
+async function requestModification() {
+  const req = document.getElementById('modify-request').value.trim();
+  if (!req) { toast('Enter a modification request first.', 'err'); return; }
+  const { ok, data } = await api('POST', '/hitl/modify_plan', { request: req });
+  if (ok) {
+    toast('Modification request sent — LLM is processing…', 'info');
+    document.getElementById('modify-request').value = '';
+    await refresh();
+  } else {
+    toast('✖ ' + (data.message || 'Modification failed'), 'err');
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// Execution control
+// ─────────────────────────────────────────────────────────
+
+async function takeManual() {
+  const robot = document.getElementById('manual-robot-select').value;
+  if (!robot) { toast('Select a robot first.', 'err'); return; }
+  const { ok, data } = await api('POST', '/hitl/take_manual_control', { robot });
+  if (ok) { toast(`🔴 ${robot} now under manual control.`, 'info'); await refresh(); }
+  else     { toast('✖ ' + (data.message || 'Failed'), 'err'); }
+}
+
+async function releaseManual() {
+  const robot = document.getElementById('manual-robot-select').value;
+  if (!robot) { toast('Select a robot first.', 'err'); return; }
+  const { ok, data } = await api('POST', '/hitl/release_manual_control', { robot });
+  if (ok) { toast(`🟢 ${robot} returned to autonomous.`, 'ok'); await refresh(); }
+  else     { toast('✖ ' + (data.message || 'Failed'), 'err'); }
+}
+
+async function pauseMission() {
+  const { ok, data } = await api('POST', '/hitl/pause_mission');
+  if (ok) { toast('⏸ Mission paused.', 'info'); await refresh(); }
+  else     { toast('✖ ' + (data.message || 'Cannot pause'), 'err'); }
+}
+
+async function resumeMission() {
+  const { ok, data } = await api('POST', '/hitl/resume_mission');
+  if (ok) { toast('▶ Mission resumed.', 'ok'); await refresh(); }
+  else     { toast('✖ ' + (data.message || 'Cannot resume'), 'err'); }
+}
+
+// ─────────────────────────────────────────────────────────
+// Manual command dispatch
+// ─────────────────────────────────────────────────────────
+
+const COMMAND_PARAMS = {
+  stop:    [],
+  hover:   [],
+  land:    [],
+  move:    [{ name:'linear_x', placeholder:'0.3 m/s'}, { name:'angular_z', placeholder:'0.0 rad/s'}],
+  go_to:   [{ name:'x', placeholder:'10.0'}, { name:'y', placeholder:'5.0'}],
+  inspect: [{ name:'target_label', placeholder:'survivor / ball'}],
+  takeoff: [{ name:'altitude', placeholder:'2.0 m'}],
+};
+
+function updateParamFields() {
+  const ct = document.getElementById('cmd-type').value.replace(' (UAV)', '');
+  const fields = COMMAND_PARAMS[ct] || [];
+  document.getElementById('param-fields').innerHTML = fields.map(f => `
+    <div style="margin-top:6px;">
+      <label>${f.name}</label>
+      <input type="text" id="param-${f.name}" placeholder="${f.placeholder}" />
+    </div>
+  `).join('');
+}
+
+async function sendCommand() {
+  const robot = document.getElementById('manual-robot-select').value;
+  if (!robot) { toast('Select a robot first.', 'err'); return; }
+  const ct = document.getElementById('cmd-type').value.replace(' (UAV)', '');
+  const fields = COMMAND_PARAMS[ct] || [];
+  const params = {};
+  for (const f of fields) {
+    const v = document.getElementById(`param-${f.name}`)?.value?.trim();
+    if (!v) { toast(`Enter value for '${f.name}'`, 'err'); return; }
+    params[f.name] = isNaN(v) ? v : Number(v);
+  }
+  const { ok, data } = await api('POST', '/hitl/send_manual_command', {
+    robot, command: ct, params
+  });
+  if (ok) toast(`📡 Command '${ct}' sent to ${robot}.`, 'ok');
+  else    toast('✖ ' + (data.message || 'Failed'), 'err');
+}
+
+// ─────────────────────────────────────────────────────────
+// Generate mission
+// ─────────────────────────────────────────────────────────
+
+async function generateMission() {
+  const title = document.getElementById('mission-title-input').value.trim();
+  const text  = document.getElementById('mission-text-input').value.trim();
+  if (!title || !text) { toast('Enter both mission title and description.', 'err'); return; }
+  const status = document.getElementById('gen-status');
+  status.textContent = '⏳ Generating plan via Manager.py — this may take ~60s…';
+  const { ok, data } = await api('POST', '/generate_plan', {
+    mission_title: title, mission_text: text
+  });
+  if (ok) {
+    status.textContent = '✅ Plan generated. Review it in the Plan Review panel.';
+    toast('✅ Plan generated — review and approve.', 'ok');
+    await refresh();
+  } else {
+    status.textContent = '❌ ' + (data.error || 'Generation failed.');
+    toast('✖ Generation failed.', 'err');
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// Boot
+// ─────────────────────────────────────────────────────────
+
+updateParamFields();
+refresh();
+startCountdown();
+</script>
+</body>
+</html>

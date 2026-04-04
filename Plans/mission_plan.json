@@ -1,0 +1,44 @@
+{
+    "drone_plan": {
+        "target": "DRONE",
+        "phases": [
+            {
+                "target": "DRONE",
+                "phase_number": 1,
+                "state": "We had a mission to locate a frisbee and it requires a drone. The drone is hovering at altitude 10.0 meters, scanning for objects.",
+                "phase_target": "Identify the object's coordinates.",
+                "inputs": [],
+                "outputs": []
+            },
+            {
+                "target": "DRONE",
+                "phase_number": 2,
+                "state": "We located the frisbee and the drone is ready to provide coordinates. The drone is at coordinates (1.0, 1.0).",
+                "phase_target": "Given the object is located, provide its coordinates to the robot dog.",
+                "inputs": [],
+                "outputs": []
+            }
+        ]
+    },
+    "robot_dog_plan": {
+        "target": "ROBOT_DOG",
+        "phases": [
+            {
+                "target": "ROBOT_DOG",
+                "phase_number": 1,
+                "state": "We have a mission to locate and grab an object. We had a drone that locates the object and the dog should grab it. The robot dog is standing at the base station, ready to navigate and the mission is to retrieve a frisbee.",
+                "phase_target": "Given a coordinate (X, Y), move to the object's location.",
+                "inputs": [],
+                "outputs": []
+            },
+            {
+                "target": "ROBOT_DOG",
+                "phase_number": 2,
+                "state": "The robot dog has arrived at the object's location and the mission is to retrieve a frisbee. The robot dog is now near the object, ready to interact with it.",
+                "phase_target": "Retrieve the object.",
+                "inputs": [],
+                "outputs": []
+            }
+        ]
+    }
+}

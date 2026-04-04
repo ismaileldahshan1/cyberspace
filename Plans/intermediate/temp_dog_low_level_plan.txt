@@ -1,0 +1,9 @@
+Phase 1:
+RobotDog.move_to(1.0, 1.0)
+if RobotDog.has_reached(1.0, 1.0):
+    RobotDog.detect_with_camera("frisbee")
+
+Phase 2:
+if RobotDog.detect_with_camera("frisbee")[1]:
+    RobotDog.retrieve_the_object("frisbee")
+

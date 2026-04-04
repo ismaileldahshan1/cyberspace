@@ -1,0 +1,44 @@
+{
+    "target": "DRONE",
+    "phases": [
+        {
+            "target": "DRONE",
+            "phase_number": 1,
+            "state": "The mission is to locate a ball in a 50x50 meter field. The drone is positioned at (5.0, 5.0) and is ready to begin scanning. It will systematically scan 10x10 meter areas to identify the block containing the ball. No progress has been made yet.",
+            "phase_target": "Identify the 10x10 meter area containing the ball.",
+            "inputs": [],
+            "outputs": {
+                "block_X": {
+                    "type": "float"
+                },
+                "block_Y": {
+                    "type": "float"
+                }
+            },
+            "low_level_plan": "Drone.move_to_point((5.0, 5.0, 10.0))\nDrone.fly(10.0)\nDrone.detect_with_camera('ball')\nDrone.move_to_point((15.0, 5.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((25.0, 5.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((35.0, 5.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((45.0, 5.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((5.0, 15.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((15.0, 15.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((25.0, 15.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((35.0, 15.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((45.0, 15.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((5.0, 25.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((15.0, 25.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((25.0, 25.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((35.0, 25.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((45.0, 25.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((5.0, 35.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((15.0, 35.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((25.0, 35.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((35.0, 35.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((45.0, 35.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((5.0, 45.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((15.0, 45.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((25.0, 45.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((35.0, 45.0, 10.0))\nDrone.detect_with_camera('ball')\nDrone.move_to_point((45.0, 45.0, 10.0))\nDrone.detect_with_camera('ball')"
+        },
+        {
+            "target": "DRONE",
+            "phase_number": 2,
+            "state": "The mission is to locate a ball in a 50x50 meter field. The drone has identified a 10x10 meter block containing the ball. The drone is positioned at the center of the identified block, ready to communicate the location to the robot dog.",
+            "phase_target": "Communicate the identified block coordinates to the robot dog.",
+            "inputs": {
+                "block_X": {
+                    "type": "float"
+                },
+                "block_Y": {
+                    "type": "float"
+                }
+            },
+            "outputs": {
+                "block_X": {
+                    "type": "float"
+                },
+                "block_Y": {
+                    "type": "float"
+                }
+            },
+            "low_level_plan": "Drone.communicate_with_apm({'block_X': block_X, 'block_Y': block_Y})"
+        }
+    ]
+}

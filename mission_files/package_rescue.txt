@@ -1,0 +1,1 @@
+A small emergency supply package has been dropped in an unknown location within a 50x50 meter field. The drone must perform an aerial sweep to locate the package using its camera. Once the package coordinates are identified, the drone transmits the location to the robot dog. The robot dog navigates to the location, picks up the package, and returns it to the base station.

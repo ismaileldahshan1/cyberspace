@@ -1,0 +1,9 @@
+Phase 1:
+Drone.fly(10.0)
+Drone.move_to_point((0.0,0.0,10.0))
+Drone.detect_with_camera("frisbee")
+
+Phase 2:
+Drone.communicate_with_apm((0.0,0.0))
+Drone.wait_for_signal()
+

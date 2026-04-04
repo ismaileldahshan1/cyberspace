@@ -1,0 +1,1 @@
+A drone locates a frisbee at coordinates (0.5, 1.5) and a robot dog retrieves it.

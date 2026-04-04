@@ -1,0 +1,12 @@
+Phase 1:
+RobotDog.wait_for_signal()
+
+Phase 2:
+RobotDog.move_to_point((x, y))
+
+Phase 3:
+RobotDog.detect_with_camera(object)
+RobotDog.retrieve_the_object(object)
+
+Phase 4:
+RobotDog.return_to_base()

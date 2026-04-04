@@ -1,0 +1,48 @@
+{
+    "phases": [
+        {
+            "inputs": {},
+            "low_level_plan": "1. RobotDog.wait_for_signal()\n2. RobotDog.communicate_with_apm(\"ready to receive coordinates\")\n3. RobotDog.move_to_point(received_coordinates)\n4. RobotDog.detect_with_camera(\"frisbee\")\n5. RobotDog.rotate(360)\n6. RobotDog.detect_with_camera(\"frisbee\")\n7. RobotDog.retrieve_the_object(\"frisbee\")\n8. RobotDog.return_to_base()",
+            "outputs": {},
+            "phase_number": 1,
+            "phase_target": "Receive the object's coordinates from the drone.",
+            "state": "We have a mission to locate and grab an object. We had a drone that locates the object and the dog should grab it. The robot dog is standing at the base station, ready to navigate and receive coordinates.",
+            "target": "ROBOT_DOG"
+        },
+        {
+            "inputs": {
+                "X": {
+                    "type": "float"
+                },
+                "Y": {
+                    "type": "float"
+                }
+            },
+            "low_level_plan": "1. rotate(90)\n2. detect_with_camera(obstacle)\n3. if detection status:\n4. jump()\n5. rotate(-90)\n6. move_to_point((X, Y))",
+            "outputs": {},
+            "phase_number": 2,
+            "phase_target": "Given a coordinate (X, Y), move to the object's location.",
+            "state": "We received the object's coordinates and the robot dog is ready to navigate to the object. The robot dog has the coordinates and is standing at the base station.",
+            "target": "ROBOT_DOG"
+        },
+        {
+            "inputs": {},
+            "low_level_plan": "RobotDog.detect_with_camera(object)\nRobotDog.retrieve_the_object(object)",
+            "outputs": {},
+            "phase_number": 3,
+            "phase_target": "Retrieve the object.",
+            "state": "We navigated to the object's location and the robot dog is ready to retrieve the object. The robot dog has the navigation status and is standing near the object.",
+            "target": "ROBOT_DOG"
+        },
+        {
+            "inputs": {},
+            "low_level_plan": "RobotDog.return_to_base()",
+            "outputs": {},
+            "phase_number": 4,
+            "phase_target": "Return to the base station.",
+            "state": "We retrieved the object and the robot dog is ready to return to the base station. The robot dog has the retrieval status and is standing near the object with the object in its possession.",
+            "target": "ROBOT_DOG"
+        }
+    ],
+    "target": "ROBOT_DOG"
+}

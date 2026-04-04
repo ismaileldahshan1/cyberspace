@@ -1,0 +1,1 @@
+A drone and a robot dog must collaborate to find and retrieve a frisbee in a 50x50 meter field. The drone scans from altitude 10m and outputs the frisbee X and Y coordinates. The robot dog waits, then navigates to coordinates X and Y to retrieve the frisbee and returns to base.

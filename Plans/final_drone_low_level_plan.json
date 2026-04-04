@@ -1,0 +1,30 @@
+{
+    "phases": [
+        {
+            "inputs": {},
+            "low_level_plan": "Drone.fly(10.0)\nDrone.move_to_point((0.0,0.0,10.0))\nDrone.detect_with_camera(\"frisbee\")",
+            "outputs": {
+                "X": {
+                    "type": "float"
+                },
+                "Y": {
+                    "type": "float"
+                }
+            },
+            "phase_number": 1,
+            "phase_target": "Identify the frisbee's coordinates.",
+            "state": "The drone is hovering at altitude 10.0 meters, scanning for objects with its onboard camera, mission just started.",
+            "target": "DRONE"
+        },
+        {
+            "inputs": {},
+            "low_level_plan": "Drone.communicate_with_apm((0.0,0.0))\nDrone.wait_for_signal()",
+            "outputs": {},
+            "phase_number": 2,
+            "phase_target": "Transmit the frisbee's coordinates to the robot dog.",
+            "state": "The drone is still hovering at altitude 10.0 meters, mission progress: scanning completed.",
+            "target": "DRONE"
+        }
+    ],
+    "target": "DRONE"
+}

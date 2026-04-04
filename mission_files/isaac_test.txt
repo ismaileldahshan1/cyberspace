@@ -1,0 +1,1 @@
+A package is located somewhere in the field. The drone scans and finds its coordinates. The robot dog navigates to the package and retrieves it.
