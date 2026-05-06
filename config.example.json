@@ -1,0 +1,57 @@
+{
+    "openai_api_key": "YOUR_OPENAI_API_KEY",
+    "llama_api_key": "YOUR_SAMBANOVA_API_KEY",
+    "mission_plan_file": "Plans/mission_plan.json",
+    "mission_text_file": "mission_files/test_mission.txt",
+    "robots": [
+        "DRONE",
+        "ROBOT_DOG",
+        "TURTLEBOT3"
+    ],
+    "robots_in_curr_mission": [
+        "DRONE",
+        "ROBOT_DOG",
+        "TURTLEBOT3"
+    ],
+    "robots_config": {
+        "DRONE": {
+            "spec_file": "mission_files/drone_specifications.txt",
+            "rules_file": "Robots/Rules/drone_rules.txt",
+            "low_rubric_file": "Robots/Rubrics/drone_low_rubric.txt",
+            "middle_rubric_file": "Robots/Rubrics/drone_middle_rubric.txt",
+            "high_plan_key": "drone_plan",
+            "example_output": "Robots/Example_Outputs/drone_example_output.txt",
+            "temp_low": "Plans/intermediate/temp_drone_low_level_plan.txt",
+            "verified": "Plans/intermediate/verified_drone_plan.txt",
+            "parsed": "Plans/intermediate/parsed_drone_verified_plan.txt",
+            "final_low": "Plans/final_drone_low_level_plan.json",
+            "instruction_format": "Drone.instruction()"
+        },
+        "ROBOT_DOG": {
+            "spec_file": "mission_files/dog_specifications.txt",
+            "rules_file": "Robots/Rules/dog_rules.txt",
+            "low_rubric_file": "Robots/Rubrics/dog_low_rubric.txt",
+            "middle_rubric_file": "Robots/Rubrics/dog_middle_rubric.txt",
+            "high_plan_key": "robot_dog_plan",
+            "example_output": "Robots/Example_Outputs/dog_example_output.txt",
+            "temp_low": "Plans/intermediate/temp_dog_low_level_plan.txt",
+            "verified": "Plans/intermediate/verified_dog_plan.txt",
+            "parsed": "Plans/intermediate/parsed_dog_verified_plan.txt",
+            "final_low": "Plans/final_dog_low_level_plan.json",
+            "instruction_format": "RobotDog.instruction()"
+        },
+        "TURTLEBOT3": {
+            "spec_file": "mission_files/burger_specifications.txt",
+            "rules_file": "Robots/Rules/burger_rules.txt",
+            "low_rubric_file": "Robots/Rubrics/burger_low_rubric.txt",
+            "middle_rubric_file": "Robots/Rubrics/burger_middle_rubric.txt",
+            "high_plan_key": "turtlebot3_plan",
+            "example_output": "Robots/Example_Outputs/burger_example_output.txt",
+            "temp_low": "Plans/intermediate/temp_burger_low_level_plan.txt",
+            "verified": "Plans/intermediate/verified_burger_plan.txt",
+            "parsed": "Plans/intermediate/parsed_burger_verified_plan.txt",
+            "final_low": "Plans/final_burger_low_level_plan.json",
+            "instruction_format": "TurtleBot3.instruction()"
+        }
+    }
+}
