@@ -1,0 +1,4 @@
+"TurtleBot3.wait_for_signal()\n"
+"TurtleBot3.move_to_point((<x>, <y>))\n"
+"TurtleBot3.detect_with_camera('ball')\n"
+"TurtleBot3.retrieve_object('ball')"

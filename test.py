@@ -1,10 +1,10 @@
-from langchain.vectorstores import Chroma
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_openai import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
-from langchain.document_loaders import TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.llms import OpenAI
-from langchain.chat_models import ChatOpenAI
+from langchain_community.document_loaders import TextLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.llms import OpenAI
+from langchain_openai import ChatOpenAI
 import os
 import warnings
 warnings.filterwarnings("ignore")

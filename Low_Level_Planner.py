@@ -3,13 +3,14 @@ import re
 import argparse
 import os
 import subprocess
+import time
 import json
 from langchain_openai import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from Utils import read_file
 
 # NEW: Import the Pydantic output parser and related classes
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import RootModel
 from typing import Dict
 
@@ -17,6 +18,21 @@ import sys
 import codecs
 
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+
+
+def llm_invoke_with_retry(llm, messages, retries=5, base_delay=30):
+    """Invoke the LLM with exponential backoff on rate limit errors."""
+    for attempt in range(1, retries + 1):
+        try:
+            return llm.invoke(messages)
+        except Exception as e:
+            if "rate_limit" in str(e).lower() or "429" in str(e):
+                wait = base_delay * attempt
+                print(f"[LLM] Rate limit hit (attempt {attempt}/{retries}). Waiting {wait}s...")
+                time.sleep(wait)
+            else:
+                raise
+    raise RuntimeError(f"LLM call failed after {retries} retries.")
 
 
 class LowLevelPlan(RootModel[Dict[str, str]]):
@@ -86,7 +102,7 @@ Output a JSON object where each key is the phase number (as a string) and each v
     """
     print("LLM Prompt:\n", prompt)  # For debugging
 
-    response = llm.invoke([
+    response = llm_invoke_with_retry(llm, [
         SystemMessage(content="You are a helpful assistant."),
         HumanMessage(content=prompt)
     ])

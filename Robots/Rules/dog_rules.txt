@@ -5,5 +5,6 @@
 - If the robot dog needs to wait, explicitly include an idle state.
 - Every movement must be verified using `if RobotDog.has_reached(X, Y):` before proceeding.
 - You are responsible for the translation of the high-level plan of the robot dog into a low-level set of executable robot dog instructions using ONLY the provided instructions. You won't be doing anything for the drone.  
-- You can use the set of Input variables for a given phase and pass them when calling the functions you use in the low-level plan if needed. However, you should place the variables between those symboles <>. For example, Drone.move_to(<x>, <y>)
+- You can use the set of Input variables for a given phase and pass them when calling the functions you use in the low-level plan if needed. However, you should place the variables between those symbols <>. For example, if the phase has Inputs: [X <float>, Y <float>], then write RobotDog.move_to_point((<X>, <Y>)).
+- IMPORTANT: When a phase has coordinate inputs (X, Y or X1, Y1 etc.), you MUST pass those exact variable names inside <> to move_to_point. The variable names must match exactly what is declared in the phase Inputs.
 """

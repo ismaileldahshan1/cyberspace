@@ -1,0 +1,1 @@
+A drone locates a frisbee at coordinates (3.5, 7.2) and sends the location to the TurtleBot3. The TurtleBot3 navigates to those coordinates and retrieves the frisbee, then returns to base.

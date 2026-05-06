@@ -4,7 +4,7 @@ import logging
 import os
 import json
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
+from langchain_core.messages import HumanMessage
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS if frontend or robots are communicating from different origins

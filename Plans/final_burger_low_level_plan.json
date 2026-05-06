@@ -1,0 +1,41 @@
+{
+    "target": "TURTLEBOT3",
+    "phases": [
+        {
+            "target": "TURTLEBOT3",
+            "phase_number": 1,
+            "state": "TurtleBot3 is at base station, waiting for drone signal with Survivor 2 coordinates. Mission is to rescue survivors.",
+            "phase_target": "Receive Survivor 2 coordinates from drone.",
+            "inputs": [],
+            "outputs": [],
+            "low_level_plan": "TurtleBot3.wait_for_signal()"
+        },
+        {
+            "target": "TURTLEBOT3",
+            "phase_number": 2,
+            "state": "TurtleBot3 has received Survivor 2 coordinates (8.0, 3.0), ready to navigate. Mission progress: en route to Survivor 2.",
+            "phase_target": "Navigate to Survivor 2 coordinates (X, Y).",
+            "inputs": [],
+            "outputs": [],
+            "low_level_plan": "TurtleBot3.scan_with_lidar()\nTurtleBot3.move_to_point((8.0, 3.0))\nTurtleBot3.detect_with_camera('Survivor 2')"
+        },
+        {
+            "target": "TURTLEBOT3",
+            "phase_number": 3,
+            "state": "TurtleBot3 has arrived at Survivor 2 coordinates, supplies are ready. Mission progress: delivering supplies.",
+            "phase_target": "Deliver supplies to Survivor 2.",
+            "inputs": [],
+            "outputs": [],
+            "low_level_plan": "TurtleBot3.retrieve_object('supplies')\nTurtleBot3.communicate_with_apm('Delivered supplies to Survivor 2')"
+        },
+        {
+            "target": "TURTLEBOT3",
+            "phase_number": 4,
+            "state": "TurtleBot3 has delivered supplies, ready to return to base. Mission progress: returning to base.",
+            "phase_target": "Navigate back to base.",
+            "inputs": [],
+            "outputs": [],
+            "low_level_plan": "TurtleBot3.scan_with_lidar()\nTurtleBot3.return_to_base()"
+        }
+    ]
+}

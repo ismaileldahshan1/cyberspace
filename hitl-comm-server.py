@@ -33,7 +33,7 @@ import sys
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
+from langchain_core.messages import HumanMessage
 
 # ── SharedAutonomy package ──────────────────────────────
 # Ensure the project root is on the Python path so the
@@ -94,10 +94,11 @@ control_unit = ControlUnit()
 
 # Register robots from config with their types
 ROBOT_TYPES = {
-    "DRONE":     "aerial",
-    "ROBOT_DOG": "ground",
-    "TURTLEBOT": "ground",
-    "UAV":       "aerial",
+    "DRONE":      "aerial",
+    "ROBOT_DOG":  "ground",
+    "TURTLEBOT":  "ground",
+    "TURTLEBOT3": "ground",
+    "UAV":        "aerial",
 }
 
 for robot_name in config.get("robots_in_curr_mission", []):
@@ -219,8 +220,29 @@ def generate_plan():
         with open(config_path, "w") as f:
             json.dump(cfg, f, indent=4)
 
+        # Record timestamps before running so we can verify files were updated
+        before = {
+            robot: os.path.getmtime(cfg["robots_config"][robot]["final_low"])
+            if os.path.exists(cfg["robots_config"][robot]["final_low"]) else 0
+            for robot in cfg["robots_in_curr_mission"]
+        }
+
         # Run the CyberScape planning pipeline
         subprocess.run(["python3", "Manager.py"], check=True)
+
+        # Verify each robot's plan file was actually updated
+        missing = []
+        for robot in cfg["robots_in_curr_mission"]:
+            filename = cfg["robots_config"][robot]["final_low"]
+            if not os.path.exists(filename):
+                missing.append(robot)
+            elif os.path.getmtime(filename) <= before[robot]:
+                missing.append(robot)
+        if missing:
+            return jsonify({
+                "error": f"Planning pipeline failed to generate updated plans for: {missing}. "
+                         "Check server logs — likely a rate limit error."
+            }), 500
 
         # Load generated plans into memory
         for robot in cfg["robots_in_curr_mission"]:

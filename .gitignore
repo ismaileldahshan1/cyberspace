@@ -1,3 +1,6 @@
 myenv/
 env/
 .env
+config.json
+__pycache__/
+*.pyc

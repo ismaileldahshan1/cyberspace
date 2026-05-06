@@ -2,15 +2,29 @@ import os
 import argparse
 import re
 import json
+import time
 from langchain_openai import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
-from langchain.prompts import PromptTemplate
+from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.prompts import PromptTemplate
 from Utils import read_file
 from langchain_google_genai import GoogleGenerativeAI
 
 import sys
 import codecs
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+
+def llm_invoke_with_retry(llm, messages, retries=5, base_delay=30):
+    for attempt in range(1, retries + 1):
+        try:
+            return llm.invoke(messages)
+        except Exception as e:
+            if "rate_limit" in str(e).lower() or "429" in str(e):
+                wait = base_delay * attempt
+                print(f"[LLM] Rate limit hit (attempt {attempt}/{retries}). Waiting {wait}s...")
+                time.sleep(wait)
+            else:
+                raise
+    raise RuntimeError(f"LLM call failed after {retries} retries.")
 
 
 # Load Gemini Pro Model
@@ -90,7 +104,7 @@ def parse_generated_plan(llm, generated_text, target):
     - Ensure **inputs and outputs are written as comma-separated lists inside square brackets.**
     """
 
-    response = llm.invoke([SystemMessage(content="You are a helpful assistant"), HumanMessage(content=parsing_prompt)])
+    response = llm_invoke_with_retry(llm, [SystemMessage(content="You are a helpful assistant"), HumanMessage(content=parsing_prompt)])
 
     if not response:
         raise ValueError("Error: LLM returned an empty response.")
@@ -143,69 +157,87 @@ def generate_plan(llm, mission_text, target):
     **Your Task:**  
     Generate a structured, step-by-step mission plan specifically for the **{target}**.
 
-    **Plan Structure:**  
+    **Plan Structure:**
     - Each phase must describe an independent **mission objective**.
     - The **drone** is responsible for aerial scanning and providing location data.
-    - The **robot dog** handles ground operations and object interaction.
+    - The **robot dog** handles ground operations, jumping, and object interaction.
+    - The **TurtleBot3** is a ground robot that navigates, scans with LiDAR, detects objects with camera, and retrieves objects. It cannot fly or jump.
     - The **output of each phase** must serve as the **input for the next relevant phase**.
     - Clearly specify **inputs and outputs** for each phase.
 
-    **Key Rules:**  
-    1. **Thorough State Descriptions**  
-       - Clearly describe the **robot's current state** before each phase.  
-       - Provide relevant **sensor data, positional information, or active tasks** in the state.  
-       - Avoid vague descriptions like "waiting" or "processing"; be specific.  
-       - Summarize the main mission we have in the state and also summarize the progress we had so far in the mission.
-       - Make state descrption around 70 words for each phase. 
+    **Key Rules:**
 
-    2. **Phase Independence**  
-       - Each phase must be fully independent and self-contained.  
-       - If a phase requires an input (e.g., a coordinate from a previous phase), **explicitly state it** as:  
-         - `"Given a coordinate (X, Y), perform the following action..."`  
-       - This ensures clarity in execution.  
+    1. **Thorough State Descriptions**
+       - Clearly describe the **robot's current state** before each phase.
+       - Provide relevant **sensor data, positional information, or active tasks** in the state.
+       - Avoid vague descriptions like "waiting" or "processing"; be specific.
+       - Summarize the main mission and progress so far in the state.
+       - Make state description around 70 words for each phase.
 
-    3. **Strict Data Type Constraints**  
-       - **All variables can be either strings or floats**  
-       - There are **no complex types or arrays** in the inputs or outputs.  
-       - Example: If the output of one phase is a location, it should be defined as:  
-         - `Outputs: [X <float>, Y  <float>]`  
-       - Similarly, if an object is detected, the output should be string:  
-         - `Outputs: [detection_status <string>]`  
+    2. **Phase Independence**
+       - Each phase must be fully independent and self-contained.
+       - If a phase requires an input (e.g., a coordinate from a previous phase), explicitly state it:
+         - `"Given a coordinate (X, Y), perform the following action..."`
 
-    **Example Format:**  
+    3. **MANDATORY Coordinate Variable Rules — YOU MUST FOLLOW THESE EXACTLY:**
+       - Every variable MUST be either a float or a string. No arrays, no dicts.
+       - **RULE A — DRONE DETECTION:** Any drone phase that detects or locates an object/position MUST have:
+         `Outputs: [X <float>, Y <float>]`
+         Never leave outputs empty if the drone found a location.
+       - **RULE B — GROUND ROBOT NAVIGATION:** Any phase where ROBOT_DOG or TURTLEBOT3 navigates to a location received from another robot MUST have:
+         `Inputs: [X <float>, Y <float>]`
+         Never leave inputs empty if the robot is moving to a coordinate.
+       - **RULE C — VARIABLE NAMES MUST MATCH:** The output variable name from one robot's phase MUST exactly match the input variable name in the receiving robot's phase. Example: if drone outputs `X <float>, Y <float>` then the ground robot inputs must also be `X <float>, Y <float>`.
+       - **RULE D — NO EMPTY OUTPUTS:** A phase that discovers, detects, or computes any value used by another phase MUST declare it as an output. `Outputs: []` is FORBIDDEN for such phases.
 
-    **Drone Plan:**  
+    **Example — Drone locates, TurtleBot3 navigates:**
     ```
-    Phase 1:  
-    - State: We had a mission to locate an object and it requires a drone. The drone is hovering at altitude 10.0 meters, scanning for objects with its onboard camera.  
-    - Target: Identify the object's coordinates.  
-    - Inputs: []  
-    - Outputs: [X <float> , Y <float>]  
+    Drone Phase 1:
+    - State: Mission to locate target. Drone is at 10m altitude scanning with camera.
+    - Target: Scan area and identify target coordinates.
+    - Inputs: []
+    - Outputs: [X <float>, Y <float>]
+
+    TurtleBot3 Phase 1:
+    - State: Waiting for drone to finish scanning. TurtleBot3 is at base station.
+    - Target: Wait for drone signal then navigate to received coordinates (X, Y).
+    - Inputs: [X <float>, Y <float>]
+    - Outputs: [arrival_status <string>]
+
+    TurtleBot3 Phase 2:
+    - State: TurtleBot3 has arrived at target coordinates. Ready to inspect.
+    - Target: Perform close-up inspection and report findings.
+    - Inputs: []
+    - Outputs: [inspection_result <string>]
     ```
 
-    **Robot Dog Plan:**  
+    **Example — Drone locates two targets, Dog gets one, TurtleBot3 gets the other:**
     ```
-    Phase 1:  
-    - State: We have a mission to locate and grap an object. We had a drone that locates the object and the dog should grap it. The robot dog is standing at the base station, ready to navigate.  
-    - Target: Given a coordinate (X, Y), move to the object's location and retrieve it.  
-    - Inputs: [X <float>, Y <float>]  
-    - Outputs: [retrieval_status <string>]  
+    Drone Phase 1:
+    - Outputs: [X1 <float>, Y1 <float>]
+
+    Drone Phase 2:
+    - Outputs: [X2 <float>, Y2 <float>]
+
+    Robot Dog Phase 1:
+    - Inputs: [X1 <float>, Y1 <float>]
+
+    TurtleBot3 Phase 1:
+    - Inputs: [X2 <float>, Y2 <float>]
     ```
 
     **Final Constraints:**
-    - **Strictly follow the given format.**
-    - **No explanations—return only structured text.**
-    - **Ensure logical input-output flow between phases.**
-    - **If the plan is only targeting a single robot, do not provide any plan for the other robot.**
-    - **The drone and robot dog should communicate through outputs and inputs only.**
-    - **The input and output variables are variables related to the environment and the progress of the mission, not processing.**
-    - **For a search-and-retrieve mission: the DRONE must output X <float> and Y <float> (the detected object's coordinates). The ROBOT_DOG must take X <float> and Y <float> as inputs in the phase where it navigates to the object.**
-    - **Every phase that produces data another phase depends on MUST declare that data as an output. Every phase that uses data from a previous phase MUST declare it as an input.**
-    - **Do NOT leave outputs empty ([]) for a phase that computes or discovers a value needed by any subsequent phase.**
+    - **Strictly follow the given format. Return only structured text, no explanations.**
+    - **ALWAYS declare X <float> and Y <float> as outputs when a robot discovers a position.**
+    - **ALWAYS declare X <float> and Y <float> as inputs when a robot navigates to a received position.**
+    - **Variable names in outputs of one phase MUST match inputs of the dependent phase.**
+    - **If the plan targets only a subset of robots, do not include plans for unused robots.**
+    - **The TurtleBot3 is a ground robot — do NOT assign it aerial tasks. It uses LiDAR for area scanning and camera for object detection.**
+    - **Outputs: [] is only allowed for phases that produce NO data needed by other phases.**
     """
     
 
-    response = llm.invoke([SystemMessage(content="You are a helpful assistant"), HumanMessage(content=prompt)])
+    response = llm_invoke_with_retry(llm, [SystemMessage(content="You are a helpful assistant"), HumanMessage(content=prompt)])
     print(type(response))
     return parse_generated_plan(llm,response, target)
 
@@ -240,7 +272,7 @@ def refine_plan(llm, mission_text, plan):
     )
 
     while count < 3:
-        response = llm.invoke([HumanMessage(content=prompt_template.format(mission=mission_text, plan=str(final_plan)))])
+        response = llm_invoke_with_retry(llm, [HumanMessage(content=prompt_template.format(mission=mission_text, plan=str(final_plan)))])
         new_rating, modified_plan_text = extract_rating_and_plan(response.content)
 
         if new_rating is None or new_rating <= rating or new_rating == 10:

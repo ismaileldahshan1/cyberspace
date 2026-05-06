@@ -1,0 +1,21 @@
+# TurtleBot3 Middle-Level Plan Evaluation Rubric
+
+## **1. Correctness of Execution**
+- [ ] Does the plan correctly implement all steps required by the high-level plan?
+- [ ] Are all phases logically structured to achieve the mission goals?
+- [ ] Are all required actions properly sequenced to ensure smooth execution?
+- [ ] Does the plan provide exhaustive scenarios for the phases?
+
+## **2. Proper Phase Structuring**
+- [ ] Is the plan divided into distinct **phases**, where each phase represents a complete, independent step in the mission?
+- [ ] Does each phase execute **only after confirming the previous one is completed**?
+- [ ] Are any unnecessary dependencies or incorrect sequencing present?
+
+## **3. Ground Robot Constraints**
+- [ ] Does the plan stay within the TurtleBot3 Burger's physical constraints (ground only, max 0.22 m/s)?
+- [ ] Are no aerial commands (fly, hover, takeoff) included?
+- [ ] Is LiDAR used for obstacle/environment scanning and camera used for object detection?
+
+## **4. Coverage of All Conditions**
+- [ ] Does the plan include handling for different possible outcomes (e.g., object found vs. not found)?
+- [ ] Are wait_for_signal phases present when the TurtleBot3 depends on data from another robot?

@@ -2,7 +2,7 @@ import json
 import os
 import sys
 from langchain_openai import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 
 # Load config.json
 CONFIG_FILE = "config.json"

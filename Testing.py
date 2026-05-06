@@ -1,10 +1,10 @@
 import openai
 import os
 
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
-from langchain.document_loaders import TextLoader
-from langchain.text_splitter import CharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import TextLoader
+from langchain_text_splitters import CharacterTextSplitter
 
 # ---------- Step 1: Setup API keys and environment ----------
 print(os.environ["OPENAI_API_KEY"]) 

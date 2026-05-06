@@ -1,0 +1,17 @@
+move_to_point((x,y)) // move to specific coordinates (x, y) on the ground plane
+rotate(angle) // rotate angle degrees in place (positive = left, negative = right)
+scan_with_lidar() // perform a 360° LiDAR scan of the surroundings, returns nearby obstacles and open paths
+detect_with_camera(object) // detect a specific object using the onboard camera, returns position and detection status (boolean)
+wait_for_signal() // wait for a signal from another robot or the APM to continue
+communicate_with_apm(data) // communicate with the Adaptive Planning Module (APM) to send any type of data
+retrieve_object(object) // physically approach and retrieve the specified object
+return_to_base() // return the TurtleBot3 to its base/starting position
+Remarks:
+When waiting for information from the drone or robot dog, wait_for_signal should be used.
+When scanning an area for obstacles or open space, scan_with_lidar should be used.
+When scanning with the intention of detecting a specific object, detect_with_camera should be called after each movement until detection.
+To retrieve an object after detecting it, retrieve_object should be used.
+The TurtleBot3 Burger is a ground robot — it cannot fly, jump, or climb obstacles above 10mm.
+Max speed is 0.22 m/s. Max rotation speed is 2.84 rad/s.
+Do not use excessive indentation in the generated plan.
+Any scanning should be done in one phase and not distributed on separate phases.

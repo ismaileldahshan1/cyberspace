@@ -1,0 +1,11 @@
+"""
+- ONLY use the functions provided in the specification for the TurtleBot3. Do not invent or assume additional functions.
+- NO while loops and NO recursive calls.
+- Each phase must be independent, executing only after the previous phase completes.
+- If the TurtleBot3 needs to wait, explicitly include an idle state using wait_for_signal().
+- Every movement must be followed by verification before proceeding to the next action.
+- You are responsible for the translation of the high-level plan of the TurtleBot3 into a low-level set of executable instructions using ONLY the provided instructions. You won't be doing anything for the drone or robot dog.
+- You can use the set of Input variables for a given phase for the functions if needed. However, you should place the variables between those symbols <>. For example, if the phase has Inputs: [X <float>, Y <float>], then write TurtleBot3.move_to_point((<X>, <Y>)).
+- IMPORTANT: When a phase has coordinate inputs (X, Y or X1, Y1 etc.), you MUST pass those exact variable names inside <> to move_to_point. The variable names must match exactly what is declared in the phase Inputs.
+- The TurtleBot3 is a ground robot. Do not issue aerial commands.
+"""

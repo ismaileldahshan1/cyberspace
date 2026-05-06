@@ -4,5 +4,6 @@
 - Each phase must be independent, executing only after the previous phase completes.
 - If the drone needs to wait, explicitly include an idle state.
 - You are responsible for the translation of the high-level plan of the drone into a low-level set of executable drone instructions using ONLY the provided instructions. You won't be doing anything for the robot dog.  
-- You can use the set of Input variables for a given phase for the functions if needed. However, you should place the variables between those symboles <>. For example, Drone.move_to(<x>, <y>)
+- You can use the set of Input variables for a given phase for the functions if needed. However, you should place the variables between those symbols <>. For example, if the phase has Inputs: [X <float>, Y <float>], then write Drone.move_to_point((<X>, <Y>, altitude)).
+- IMPORTANT: When a phase produces coordinate outputs (X, Y), you MUST declare those as outputs in the phase and include communicate_with_apm with those exact variable names so other robots can receive them.
 """

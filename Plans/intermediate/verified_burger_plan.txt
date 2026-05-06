@@ -1,0 +1,16 @@
+Phase 1:
+TurtleBot3.wait_for_signal()
+
+Phase 2:
+TurtleBot3.scan_with_lidar()
+TurtleBot3.move_to_point((8.0, 3.0))
+TurtleBot3.detect_with_camera('Survivor 2')
+
+Phase 3:
+TurtleBot3.retrieve_object('supplies')
+TurtleBot3.communicate_with_apm('Delivered supplies to Survivor 2')
+
+Phase 4:
+TurtleBot3.scan_with_lidar()
+TurtleBot3.return_to_base()
+

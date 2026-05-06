@@ -1,11 +1,25 @@
 import argparse
 import asyncio
+import time
 from langchain_openai import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from Utils import read_file
 import warnings
 import json
 warnings.filterwarnings("ignore")
+
+def llm_invoke_with_retry(llm, messages, retries=5, base_delay=30):
+    for attempt in range(1, retries + 1):
+        try:
+            return llm.invoke(messages)
+        except Exception as e:
+            if "rate_limit" in str(e).lower() or "429" in str(e):
+                wait = base_delay * attempt
+                print(f"[LLM] Rate limit hit (attempt {attempt}/{retries}). Waiting {wait}s...")
+                time.sleep(wait)
+            else:
+                raise
+    raise RuntimeError(f"LLM call failed after {retries} retries.")
 
 def generate_verification_prompt(mission, plan, rubric):
     """Generates a structured verification prompt."""
@@ -55,19 +69,19 @@ def verify_plan(llm, mission, plan, rubric):
     for _ in range(2):
         # Step 1: Evaluate the plan
         eval_prompt = generate_verification_prompt(mission, plan, rubric)
-        evaluation_response = llm.invoke([
+        evaluation_response = llm_invoke_with_retry(llm, [
             SystemMessage(content="You are a critical evaluator for autonomous robot plans."),
             HumanMessage(content=eval_prompt)
         ])
         evaluation = evaluation_response.content.strip()
-        
+
         # If evaluation finds no weaknesses, finalize the plan
         if "Weaknesses:" not in evaluation:
             break
-        
+
         # Step 2: Improve the plan
         improve_prompt = generate_improvement_prompt(mission, plan, rubric, evaluation)
-        improved_plan_response = llm.invoke([
+        improved_plan_response = llm_invoke_with_retry(llm, [
             SystemMessage(content="You are a robotics planning expert."),
             HumanMessage(content=improve_prompt)
         ])
@@ -92,7 +106,7 @@ def main():
     mission = read_file(mission_file)
     
     llm = ChatOpenAI(
-        api_key="c7e68755-3cfd-4f4a-a695-6a41af9ffd23",
+        api_key=config.get("llama_api_key", ""),
         base_url="https://api.sambanova.ai/v1",
         model_name="Meta-Llama-3.3-70B-Instruct",
         temperature=0.1
